@@ -1,103 +1,260 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useEffect } from "react";
+import { Input } from "@/components/ui/input";
+import { PixelWarrior } from "@/components/pixel-warrior-detailed";
+import { PasswordGenerator } from "@/components/password-generator";
+import { analyzePassword } from "@/lib/password-utils";
+import { Eye, EyeOff } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [analysis, setAnalysis] = useState(analyzePassword(""));
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  useEffect(() => {
+    setAnalysis(analyzePassword(password));
+  }, [password]);
+
+  const strengthColors = {
+    "very-weak": "bg-neutral-500",
+    weak: "bg-neutral-600",
+    fair: "bg-neutral-700",
+    good: "bg-neutral-800",
+    strong: "bg-neutral-900",
+    ultimate: "bg-black",
+  };
+
+  const strengthTexts = {
+    "very-weak": "Very Weak",
+    weak: "Weak",
+    fair: "Fair",
+    good: "Good",
+    strong: "Strong",
+    ultimate: "ULTIMATE",
+  };
+
+  const strengthColor = strengthColors[analysis.strength];
+  const strengthText = strengthTexts[analysis.strength];
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-950 dark:to-neutral-900">
+      <div className="container mx-auto px-4 py-6 sm:py-8">
+        {/* Header */}
+        <header className="text-center mb-8 sm:mb-12">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-neutral-900 dark:text-neutral-50 mb-2">
+            Power Up Your Passwords
+          </h1>
+          <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400">
+            Create legendary passwords and watch your warrior evolve!
+          </p>
+        </header>
+
+        {/* Main Layout - Side by Side */}
+        <div className="grid lg:grid-cols-[1fr_2fr] gap-8 max-w-7xl mx-auto">
+          {/* Left: Warrior Display */}
+          <div className="flex flex-col items-center justify-start lg:sticky lg:top-8 lg:self-start">
+            <div className="w-full max-w-md">
+              {/* Level Badge */}
+              <div className="text-center mb-6">
+                <div
+                  className={`inline-flex items-center gap-2 px-6 py-3 rounded-full ${strengthColor} text-white font-bold text-lg shadow-lg`}
+                >
+                  Level {analysis.level}: {strengthText}
+                </div>
+              </div>
+
+              {/* Warrior */}
+              <div className="flex justify-center mb-6">
+                <PixelWarrior
+                  strength={analysis.strength}
+                  level={analysis.level}
+                  size={360}
+                />
+              </div>
+
+              {/* Score Display */}
+              <div className="text-center mb-4">
+                <div className="text-6xl font-black text-neutral-900 dark:text-neutral-50 mb-2">
+                  {analysis.score}
+                  <span className="text-2xl text-neutral-500">%</span>
+                </div>
+                <div className="h-2 bg-neutral-200 dark:bg-neutral-800 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full ${strengthColor} transition-all duration-500`}
+                    style={{ width: `${analysis.score}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Description */}
+              <p className="text-center text-sm text-neutral-600 dark:text-neutral-400 px-4">
+                {analysis.level === 1 &&
+                  "Just a peasant with no protection. Add more characters and variety!"}
+                {analysis.level === 2 &&
+                  "A novice warrior with basic equipment. Keep improving!"}
+                {analysis.level === 3 &&
+                  "A warrior with a shield. Add more character types to level up!"}
+                {analysis.level === 4 &&
+                  "A knight with armor! You're getting stronger!"}
+                {analysis.level === 5 &&
+                  "A champion with full armor and sword! Almost legendary!"}
+                {analysis.level === 6 &&
+                  "🏆 ULTIMATE! Your warrior is legendary with maximum protection!"}
+              </p>
+            </div>
+          </div>
+
+          {/* Right: Password Testing & Generator */}
+          <div className="space-y-8">
+            {/* Password Input Section */}
+            <section>
+              <h2 className="text-2xl font-bold text-neutral-900 dark:text-neutral-50 mb-4">
+                Test Your Password
+              </h2>
+
+              <div className="relative mb-4">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password..."
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="h-14 text-lg pr-12"
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-2 top-1/2 -translate-y-1/2"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </Button>
+              </div>
+
+              {/* Easter Egg Alert */}
+              {analysis.easterEgg && (
+                <div className="mb-4 p-4 bg-red-50 dark:bg-red-950 border-2 border-red-500 rounded-lg">
+                  <p className="text-sm font-bold text-red-700 dark:text-red-300 text-center">
+                    {analysis.easterEgg}
+                  </p>
+                </div>
+              )}
+
+              {/* Character Type Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+                {[
+                  {
+                    label: "Lowercase",
+                    code: "a-z",
+                    active: analysis.hasLowercase,
+                  },
+                  {
+                    label: "Uppercase",
+                    code: "A-Z",
+                    active: analysis.hasUppercase,
+                  },
+                  {
+                    label: "Numbers",
+                    code: "0-9",
+                    active: analysis.hasNumbers,
+                  },
+                  {
+                    label: "Symbols",
+                    code: "!@#",
+                    active: analysis.hasSymbols,
+                  },
+                ].map((item, index) => (
+                  <div
+                    key={index}
+                    className={`p-4 rounded-lg border-2 transition-all ${
+                      item.active
+                        ? "bg-neutral-900 dark:bg-neutral-50 border-neutral-900 dark:border-neutral-50"
+                        : "bg-neutral-100 dark:bg-neutral-900 border-neutral-300 dark:border-neutral-700"
+                    }`}
+                  >
+                    <div
+                      className={`text-xs font-medium mb-1 ${
+                        item.active
+                          ? "text-neutral-100 dark:text-neutral-900"
+                          : "text-neutral-500"
+                      }`}
+                    >
+                      {item.label}
+                    </div>
+                    <div
+                      className={`text-lg font-mono font-bold ${
+                        item.active
+                          ? "text-neutral-50 dark:text-neutral-950"
+                          : "text-neutral-400"
+                      }`}
+                    >
+                      {item.code}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Stats Grid */}
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="p-4 bg-neutral-100 dark:bg-neutral-900 rounded-lg">
+                  <div className="text-xs font-medium text-neutral-500 mb-1">
+                    Length
+                  </div>
+                  <div className="text-3xl font-bold text-neutral-900 dark:text-neutral-50">
+                    {analysis.length}
+                  </div>
+                </div>
+                <div className="p-4 bg-neutral-100 dark:bg-neutral-900 rounded-lg">
+                  <div className="text-xs font-medium text-neutral-500 mb-1">
+                    Character Types
+                  </div>
+                  <div className="text-3xl font-bold text-neutral-900 dark:text-neutral-50">
+                    {
+                      [
+                        analysis.hasLowercase,
+                        analysis.hasUppercase,
+                        analysis.hasNumbers,
+                        analysis.hasSymbols,
+                      ].filter(Boolean).length
+                    }
+                    /4
+                  </div>
+                </div>
+              </div>
+
+              {/* Feedback */}
+              {password && (
+                <div className="p-4 bg-neutral-100 dark:bg-neutral-900 rounded-lg">
+                  <h3 className="text-sm font-bold text-neutral-900 dark:text-neutral-50 mb-2">
+                    Tips:
+                  </h3>
+                  <ul className="space-y-1">
+                    {analysis.feedback.map((tip, index) => (
+                      <li
+                        key={index}
+                        className="flex items-start gap-2 text-sm text-neutral-600 dark:text-neutral-400"
+                      >
+                        <span className="mt-0.5">•</span>
+                        <span>{tip}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </section>
+
+            {/* Password Generator */}
+            <section>
+              <PasswordGenerator onPasswordGenerated={setPassword} />
+            </section>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </div>
     </div>
   );
 }
