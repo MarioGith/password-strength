@@ -12,6 +12,8 @@ export interface PasswordAnalysis {
   feedback: string[];
   isCommonPassword: boolean;
   easterEgg?: string;
+  timeToCrack: string;
+  timeToCrackSeconds: number;
 }
 
 // Common passwords for easter egg detection
@@ -36,6 +38,55 @@ const EASTER_EGG_MESSAGES: Record<string, string> = {
   'welcome': '👋 Welcome to getting hacked!',
 };
 
+function calculateTimeToCrack(password: string, hasLowercase: boolean, hasUppercase: boolean, hasNumbers: boolean, hasSymbols: boolean): { display: string; seconds: number } {
+  if (password.length === 0) {
+    return { display: 'Instantly', seconds: 0 };
+  }
+
+  // Calculate character space
+  let charSpace = 0;
+  if (hasLowercase) charSpace += 26;
+  if (hasUppercase) charSpace += 26;
+  if (hasNumbers) charSpace += 10;
+  if (hasSymbols) charSpace += 32;
+
+  if (charSpace === 0) charSpace = 26; // Fallback
+
+  // Calculate possible combinations
+  const combinations = Math.pow(charSpace, password.length);
+
+  // Assume 1 billion guesses per second (modern GPU attack)
+  const guessesPerSecond = 1_000_000_000;
+  const secondsToCrack = combinations / guessesPerSecond;
+
+  // Format time
+  if (secondsToCrack < 1) {
+    return { display: 'Instantly', seconds: secondsToCrack };
+  } else if (secondsToCrack < 60) {
+    return { display: `${Math.round(secondsToCrack)} seconds`, seconds: secondsToCrack };
+  } else if (secondsToCrack < 3600) {
+    const minutes = Math.round(secondsToCrack / 60);
+    return { display: `${minutes} minute${minutes !== 1 ? 's' : ''}`, seconds: secondsToCrack };
+  } else if (secondsToCrack < 86400) {
+    const hours = Math.round(secondsToCrack / 3600);
+    return { display: `${hours} hour${hours !== 1 ? 's' : ''}`, seconds: secondsToCrack };
+  } else if (secondsToCrack < 2592000) {
+    const days = Math.round(secondsToCrack / 86400);
+    return { display: `${days} day${days !== 1 ? 's' : ''}`, seconds: secondsToCrack };
+  } else if (secondsToCrack < 31536000) {
+    const months = Math.round(secondsToCrack / 2592000);
+    return { display: `${months} month${months !== 1 ? 's' : ''}`, seconds: secondsToCrack };
+  } else if (secondsToCrack < 3153600000) {
+    const years = Math.round(secondsToCrack / 31536000);
+    return { display: `${years} year${years !== 1 ? 's' : ''}`, seconds: secondsToCrack };
+  } else if (secondsToCrack < 3153600000000) {
+    const centuries = Math.round(secondsToCrack / 3153600000);
+    return { display: `${centuries} ${centuries !== 1 ? 'centuries' : 'century'}`, seconds: secondsToCrack };
+  } else {
+    return { display: 'Millions of years', seconds: secondsToCrack };
+  }
+}
+
 export function analyzePassword(password: string): PasswordAnalysis {
   const length = password.length;
   const hasLowercase = /[a-z]/.test(password);
@@ -47,6 +98,9 @@ export function analyzePassword(password: string): PasswordAnalysis {
   const lowerPassword = password.toLowerCase();
   const isCommonPassword = COMMON_PASSWORDS.includes(lowerPassword);
   const easterEgg = EASTER_EGG_MESSAGES[lowerPassword];
+
+  // Calculate time to crack
+  const timeToCrackData = calculateTimeToCrack(password, hasLowercase, hasUppercase, hasNumbers, hasSymbols);
 
   // Calculate score
   let score = 0;
@@ -68,6 +122,8 @@ export function analyzePassword(password: string): PasswordAnalysis {
       feedback,
       isCommonPassword: true,
       easterEgg,
+      timeToCrack: 'Instantly',
+      timeToCrackSeconds: 0,
     };
   }
 
@@ -180,6 +236,8 @@ export function analyzePassword(password: string): PasswordAnalysis {
     hasSymbols,
     feedback: feedback.length > 0 ? feedback : ['Great password!'],
     isCommonPassword: false,
+    timeToCrack: timeToCrackData.display,
+    timeToCrackSeconds: timeToCrackData.seconds,
   };
 }
 
